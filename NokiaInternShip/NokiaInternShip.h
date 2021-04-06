@@ -8,5 +8,7 @@
 #include<fstream>
 #include<vector>
 #include<set>
+#include <iomanip>
+#include <sstream>
 
 // TODO: установите здесь ссылки на дополнительные заголовки, требующиеся для программы.

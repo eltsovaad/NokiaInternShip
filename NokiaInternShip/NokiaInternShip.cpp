@@ -14,8 +14,10 @@ void findDuplicates(vector<string>);
 void findDuplicates(string,set<string>&);
 void lineParser(vector<vector<string>>&);
 void sizeChecker(vector<vector<string>>);
-void parseLine(string, vector<vector<string>>&);
+void evalFormula(string&,int,int, vector<vector<string>>, set<pair<int,int>>);
 string findExpression(vector<vector<string>>);
+bool findInTable(string&, int, int, vector<vector<string>>, set<pair<int, int>>);
+void tableViewer(vector<vector<string>>);
 
 int main(int argc, char** argv)
 {
@@ -27,6 +29,7 @@ int main(int argc, char** argv)
 	string filename = argv[1];
 	table = loadFromFile(filename);
 	lineParser(table);
+	tableViewer(table);
 	cout << "Hello CMake." << endl;
 	system("pause");
 	return 0;
@@ -134,7 +137,7 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 
 	while (string::npos != lastpos) {
 		if (pos == lastpos) {
-			cerr << "Empty column found!" << endl;
+			cerr << "Empty columnname found!" << endl;
 			exit(-8);
 		}
 		elements.push_back(fullstr.substr(pos, lastpos-pos));
@@ -211,44 +214,243 @@ void sizeChecker(vector<vector<string>> table) {
 
 void lineParser(vector<vector<string>> &table) {
 	sizeChecker(table);
-	for (auto i : table) {
-		if (i != table[0]) {
-			for (auto j : i) {
-				if (j != i[0]) {
+	for (int i = 1; i < table.size();i++) {
+			for (int j = 0; j < table[i].size(); j++) {
+				if (j != 0) {
 					try {
-						stod(j);
+						stod(table[i][j]);
 					}
 					catch (const invalid_argument& ia) {
-						if (j[0] == '=') {
-							parseLine(j, table);
+						if (table[i][j][0] == '=') {
+							set<pair<int, int>> history;
+							evalFormula(table[i][j],i,j, table, history);
 						}
 						else {
-							cerr << "Invalid expression found!" << endl;
+							cerr << table[0][j] << table[i][0] << ": Invalid expression found!" << endl;
 							exit(-14);
 						}
 					}
 				}
 				else {
 					try {
-						stoi(j);
+						stoi(table[i][j]);
 					}
 					catch (const invalid_argument& ia) {
-						cerr << "Found not integer line name!" << endl;
+						cerr << table[0][j] << table[i][0] << ": Found not integer line name!" << endl;
 						exit(-16);
 					}
 				}
 
 			}
+	}
+}
+
+void evalFormula(string &a, int line, int column,vector<vector<string>> table, set<pair<int,int>> history) {
+	string::size_type operation = a.find_first_of("+*/-", 0);
+	set<pair<int, int>> MyHistory(history);
+	if (operation == string::npos) {//если нет арифметических операций
+		try {
+			a.erase(0,1);
+			stod(a);
+		}
+		catch (const invalid_argument& ia) {
+			if (MyHistory.insert(pair<int, int>(line, column)).second) {
+				if (!findInTable(a, line, column, table, MyHistory)) {
+					cerr << table[0][column-1]<<table[line][0]<<": Couldn't find cell!!" << endl;
+					exit(-18);
+				}
+			}
+			else {
+				cerr << table[0][column-1] << table[line][0] << ": A loop in links found!" << endl;
+				exit(-17);
+			}
+		}
+	}
+	else {
+		a.erase(0, 1);
+		string firstArg = a.substr(0, operation-1);
+		string secondArg = a.substr(operation, a.length()-operation);
+		if (secondArg.find_first_of("+*/-", 0) != string::npos) {
+			cerr << table[0][column-1] << table[line][0] << ": Found more than one operation in a cell" << endl;
+			exit(-22);
+		}
+		try {
+			double firstArgDouble=stod(firstArg);
+		}
+		catch (const invalid_argument& ia) {
+			if (MyHistory.insert(pair<int, int>(line, column)).second) {
+				if (!findInTable(firstArg, line, column, table, MyHistory)) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't find cell!!" << endl;
+					exit(-18);
+				}
+			}
+			else {
+				cerr << table[0][column-1] << table[line][0] << ": A loop in links found!" << endl;
+				exit(-17);
+			}
+		}
+		try {
+			double secondArgDouble = stod(secondArg);
+		}
+		catch (const invalid_argument& ia) {
+				if (!findInTable(secondArg, line, column, table, MyHistory)) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't find cell!" << endl;
+					exit(-18);
+				}
+		}
+		if ((!firstArg.empty()) && (!secondArg.empty())) {
+			double rez;
+			switch (a[operation-1]) {
+			case '*': {
+				try {
+					rez = stod(firstArg)*stod(secondArg);
+				}
+				catch (const invalid_argument& ia) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't evaluate expression!" << endl;
+					exit(-19);
+				}
+				break;
+			}
+			case '+': {
+				try {
+					rez = stod(firstArg) + stod(secondArg);
+				}
+				catch (const invalid_argument& ia) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't evaluate expression!" << endl;
+					exit(-19);
+				}
+
+				break;
+			}
+			case '-': {
+				try {
+					rez = stod(firstArg) - stod(secondArg);
+				}
+				catch (const invalid_argument& ia) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't evaluate expression!" << endl;
+					exit(-19);
+				}
+
+				break;
+			}
+			case '/': {
+				try {
+					if (stod(secondArg) != 0) {
+						rez = stod(firstArg) / stod(secondArg);
+					}
+					else {
+						cerr << table[0][column-1] << table[line][0] << ": Division by zero!" << endl;
+						exit(-20);
+					}
+				}
+				catch (const invalid_argument& ia) {
+					cerr << table[0][column-1] << table[line][0] << ": Couldn't evaluate expression!" << endl;
+					exit(-19);
+				}
+
+
+				break;
+			}
+			default: {
+				cerr << table[0][column-1] << table[line][0] << ": Unknown error!" << endl;
+				exit(-21);
+			}
+			}
+			ostringstream streamObj;
+			// Set Fixed -Point Notation
+			streamObj << std::fixed;
+			// Set precision to 2 digits
+			if (fmod(rez, 1) > 0) {
+				streamObj << std::setprecision(2);
+			}
+			else {
+				streamObj << std::setprecision(0);
+			}
+			//Add double to stream
+			streamObj << rez;
+			// Get string from output string stream
+			a = streamObj.str();
+		}
+		else {
+			cerr << table[0][column-1] << table[line][0] << ": One of the arguments is empty!" << endl;
+			exit(-9);
 		}
 	}
 }
 
-void parseLine(string a, vector<vector<string>> &table) {
-	string::size_type operation = a.find_first_of("+*/-", 0);
-	if (operation != string::npos) {
-		a = findExpression(table);
+bool findInTable(string& str, int line, int column, vector<vector<string>> table, set<pair<int, int>>history) {
+	string::size_type linenumberPosition=str.find_first_of("1234567890");
+	if (linenumberPosition == string::npos) {
+		cerr << table[0][column-1] << table[line][0] << ": Invalid expression found!" << endl;
+		exit(-14);
 	}
-	else {
+	string lineNumber = str.substr(linenumberPosition, str.length());
+	string columnName = str.substr(0, linenumberPosition);
+	bool wasFound = false;
+	vector<string>::iterator columnIterator;
+	for (int i = 1; i < table.size(); i++) {
+		if (lineNumber == table[i][0]) {
+			for (int j = 0; j < table[0].size(); j++) {
+				if (columnName == table[0][j]) {
+					wasFound = true;
+					j++;
+					try {
+						stod(table[i][j]);
+						str = table[i][j];
+					}
+					catch (const invalid_argument& ia) {
+						if (table[i][j][0] == '=') {
+							str = table[i][j];
+							evalFormula(str, i, j, table, history);
+						}
+						else {
+							cerr << table[0][j] << table[i][0] << ": Invalid expression found!" << endl;
+							exit(-14);
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
+	return wasFound;
+}
 
+void tableViewer(vector<vector<string>> table) {
+	cout << ',';
+	for (auto i : table) {
+		for (auto j : i) {
+			/*if (j.find_first_of('"') != string::npos) {
+					set <string::size_type> doubleQuotesPositions;
+					string::size_type lastpos = 0;
+					while (j.find("\"\"", lastpos) != string::npos) {
+						doubleQuotesPositions.insert(j.find("\"\"", lastpos));
+						lastpos += 2;
+					}
+					lastpos = 0;
+					while (j.find('"', lastpos) != string::npos) {
+						set <string::size_type> temp(doubleQuotesPositions);
+						if (temp.insert(j.find('"', lastpos)).second) {
+							j.erase(j.find('"', lastpos), j.find('"', lastpos)+1);
+
+						}
+						else {
+							lastpos++;
+						}
+					}
+					lastpos = 0;
+					while (j.find("\"\"", lastpos) != string::npos) {
+						j.erase(j.find("\"\"", lastpos), j.find("\"\"", lastpos)+2);
+						lastpos += 2;
+					}
+			}*/
+			if (j != i.back()) {
+				cout << j << ',';
+			}
+			else {
+				cout << j;
+			}
+		}
+		cout << endl;
 	}
 }
