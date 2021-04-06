@@ -40,5 +40,6 @@ to run an app with an example
 - Each cell can consist a number with floating point, or a formula
 - A formula can contain a link to the other cell, or one arithmetic operation with numbers or links
 - First element of the first line should be empty
+- Program ignores spaces and tabs, so avoid them in the names of columns
 ## Furthermore
 You can find some test cases [here](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/README.md)
