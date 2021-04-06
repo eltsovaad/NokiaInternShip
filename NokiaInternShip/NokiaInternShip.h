@@ -10,5 +10,6 @@
 #include<set>
 #include <iomanip>
 #include <sstream>
+#include <cmath>
 
 // TODO: установите здесь ссылки на дополнительные заголовки, требующиеся для программы.
