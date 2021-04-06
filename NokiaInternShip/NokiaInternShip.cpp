@@ -35,6 +35,7 @@ int main(int argc, char** argv)
 }
 
 vector<vector<string>> loadFromFile(string fileName) {
+	//loads table from file
 	vector<vector<string>> table;
 	vector<string> strings;
 	ifstream f;
@@ -82,6 +83,7 @@ vector<vector<string>> loadFromFile(string fileName) {
 }
 
 void spaceDeleter(string &str) {
+	//Deletes spaces and tabs
 	string::size_type space = str.find_first_of(" \t", 0);
 	while (string::npos != space) {
 		if (string::npos != space)
@@ -91,6 +93,8 @@ void spaceDeleter(string &str) {
 }
 
 void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine) {
+	//splits fullstr into a vector of string (elements)
+	//thisIsFirstLine should be true for a title line (first)
 	if (fullstr[fullstr.length()-1] == ',') {
 		cerr << "Found a comma at the end of the line!" << endl;
 		exit(-7);
@@ -109,7 +113,7 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 		if (pos == lastpos) {
 			pos = lastpos + 1;
 			lastpos = fullstr.find_first_of(delimiter, pos);
-			if (lastpos > openQuote) {
+			if (lastpos > openQuote) {//working with commas inside quotes
 				if (closeQuote != string::npos) {
 					lastpos= fullstr.find_first_of(delimiter, closeQuote);
 				}
@@ -142,7 +146,7 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 		elements.push_back(fullstr.substr(pos, lastpos-pos));
 		pos = lastpos+1;
 		lastpos = fullstr.find_first_of(delimiter, pos);
-		if ((lastpos >= openQuote)&&(lastpos<closeQuote)) {
+		if ((lastpos >= openQuote)&&(lastpos<closeQuote)) {//working with commas inside quotes
 			if ((lastpos > openDoubleQuote) && (lastpos < closeDoubleQuote)) {
 				if (closeDoubleQuote != string::npos) {
 					lastpos = fullstr.find_first_of(delimiter, closeQuote);
@@ -180,6 +184,7 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 }
 
 void findDuplicates(vector<string> splitString) {
+	//finds duplicates in the title line
 	set<string>columns;
 	for (auto i: splitString) {
 		if (i.find_first_of("1234567890") != string::npos) {
@@ -197,6 +202,7 @@ void findDuplicates(vector<string> splitString) {
 }
 
 void findDuplicates(string lineName, set<string> &setOfNames) {
+	//finds duplicates in linenames
 	if (!setOfNames.insert(lineName).second) {
 		cerr << "Duplicate lines found!";
 		exit(-6);
@@ -204,6 +210,7 @@ void findDuplicates(string lineName, set<string> &setOfNames) {
 }
 
 void sizeChecker(vector<vector<string>> table) {
+	//checks length of lines and compares
 	if (table.size() < 2) {
 		cerr << "You should have at least 2 lines at the table!" << endl;
 		exit(-10);
@@ -233,6 +240,7 @@ void sizeChecker(vector<vector<string>> table) {
 }
 
 void lineParser(vector<vector<string>> &table) {
+	//first stage of cell parsing - searching for formulas in cells
 	sizeChecker(table);
 	for (int i = 1; i < table.size();i++) {
 			for (int j = 0; j < table[i].size(); j++) {
@@ -241,7 +249,7 @@ void lineParser(vector<vector<string>> &table) {
 						stod(table[i][j]);
 					}
 					catch (const invalid_argument& ia) {
-						if (table[i][j][0] == '=') {
+						if (table[i][j][0] == '=') {//if formula is found
 							set<pair<int, int>> history;
 							evalFormula(table[i][j],i,j, table, history);
 						}
@@ -251,7 +259,7 @@ void lineParser(vector<vector<string>> &table) {
 						}
 					}
 				}
-				else {
+				else {//checks linenames
 					try {
 						stoul(table[i][j]);
 					}
@@ -266,11 +274,12 @@ void lineParser(vector<vector<string>> &table) {
 }
 
 void evalFormula(string &a, int line, int column,vector<vector<string>> table, set<pair<int,int>> history) {
+	//evaluating formula with args found by findInTable(). Copies hystory in MyHistory and inserts only to a copy
 	string::size_type operation = a.find_first_of("+*/-", 0);
 	set<pair<int, int>> MyHistory(history);
-	if (operation == string::npos) {//если нет арифметических операций
+	if (operation == string::npos) {//if there are no operations
 		try {
-			a.erase(0,1);
+			a.erase(0,1);//erasing '=' as a first digit of formula
 			stod(a);
 		}
 		catch (const invalid_argument& ia) {
@@ -286,8 +295,8 @@ void evalFormula(string &a, int line, int column,vector<vector<string>> table, s
 			}
 		}
 	}
-	else {
-		a.erase(0, 1);
+	else {//if operations were found
+		a.erase(0, 1);//erasing '=' as a first digit of formula
 		string firstArg = a.substr(0, operation-1);
 		string secondArg = a.substr(operation, a.length()-operation);
 		if (secondArg.find_first_of("+*/-", 0) != string::npos) {
@@ -318,6 +327,7 @@ void evalFormula(string &a, int line, int column,vector<vector<string>> table, s
 					exit(-18);
 				}
 		}
+		//evaluating an operation
 		if ((!firstArg.empty()) && (!secondArg.empty())) {
 			double rez;
 			switch (a[operation-1]) {
@@ -399,6 +409,7 @@ void evalFormula(string &a, int line, int column,vector<vector<string>> table, s
 }
 
 bool findInTable(string& str, int line, int column, vector<vector<string>> table, set<pair<int, int>>history) {
+	//searches cell in formulas. If another formula is found evalFormula is calling
 	string::size_type linenumberPosition=str.find_first_of("1234567890");
 	if (linenumberPosition == string::npos) {
 		cerr << table[0][column-1] << table[line][0] << ": Invalid expression found!" << endl;
@@ -437,9 +448,11 @@ bool findInTable(string& str, int line, int column, vector<vector<string>> table
 }
 
 void tableViewer(vector<vector<string>> table) {
+	//prints table to the console
 	cout << ',';
 	for (auto i : table) {
 		for (int j = 0; j < i.size(); j++) {
+			//this commented code was used to view quotes without double quotes and colunmnames with commas in quotes
 			/*if (i[j].find_first_of('"') != string::npos) {
 					set <string::size_type> doubleQuotesPositions;
 					string::size_type lastpos = 0;
