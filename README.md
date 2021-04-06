@@ -29,7 +29,7 @@ NokiaInternShip.exe text.csv
 ```
 to run an app with an example
 ## Adavntages and constraints
-- Column names can consist commas, but this name should be placed in quotations
+- Column names can contain commas, but this name should be placed in quotations
 ```
 ,A,B,Cell,"A,B"
 ```
