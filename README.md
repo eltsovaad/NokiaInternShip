@@ -7,18 +7,19 @@ Reads CSV file with such a table:
 30,0,=B1+A1,5 
  ```
 where the first element is always empty and prints "evaluated" table in the console:
-  ```,A,B,Cell
+  ```
+  ,A,B,Cell
   1,1,0,1
   2,2,6,0
   30,0,1,5
   ```
  ## Building and compilation
 - cd to the NokiaInternShip-master folder (with CMakeLists.txt)
-- use 
-  ```
-  cmake CMakeLists.txt -G "MinGW Makefiles"
-  ```
-- than 
+- use  
+```
+cmake CMakeLists.txt -G "MinGW Makefiles"
+```
+- than  
 ```
 make
 ```
@@ -39,7 +40,8 @@ to run an app with an example
 - Column names can only contain characters, line numbers shold be integer
 - Each cell can consist a number with floating point, or a formula
 - A formula can contain a link to the other cell, or one arithmetic operation with numbers or links
+- Numbers with floating point are displayed with 2 characters precision
 - First element of the first line should be empty
 - Program ignores spaces and tabs, so avoid them in the names of columns
 ## Furthermore
-You can find some test cases [here](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/README.md)
+You can find some test cases [in the "tests" folder](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/README.md)
