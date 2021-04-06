@@ -30,7 +30,6 @@ int main(int argc, char** argv)
 	table = loadFromFile(filename);
 	lineParser(table);
 	tableViewer(table);
-	system("pause");
 	return 0;
 }
 
@@ -254,7 +253,7 @@ void lineParser(vector<vector<string>> &table) {
 							evalFormula(table[i][j],i,j, table, history);
 						}
 						else {
-							cerr << table[0][j] << table[i][0] << ": Invalid expression found!" << endl;
+							cerr << table[0][j-1] << table[i][0] << ": Invalid expression found!" << endl;
 							exit(-14);
 						}
 					}
@@ -264,7 +263,7 @@ void lineParser(vector<vector<string>> &table) {
 						stoul(table[i][j]);
 					}
 					catch (const invalid_argument& ia) {
-						cerr << table[0][j] << table[i][0] << ": Found not integer line name!" << endl;
+						cerr << table[0][j-1] << table[i][0] << ": Found not integer line name!" << endl;
 						exit(-16);
 					}
 				}
@@ -435,7 +434,7 @@ bool findInTable(string& str, int line, int column, vector<vector<string>> table
 							evalFormula(str, i, j, table, history);
 						}
 						else {
-							cerr << table[0][j] << table[i][0] << ": Invalid expression found!" << endl;
+							cerr << table[0][j-1] << table[i][0] << ": Invalid expression found!" << endl;
 							exit(-14);
 						}
 					}
