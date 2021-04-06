@@ -30,7 +30,6 @@ int main(int argc, char** argv)
 	table = loadFromFile(filename);
 	lineParser(table);
 	tableViewer(table);
-	cout << "Hello CMake." << endl;
 	system("pause");
 	return 0;
 }
@@ -92,7 +91,7 @@ void spaceDeleter(string &str) {
 }
 
 void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine) {
-	if (fullstr.length() == ',') {
+	if (fullstr[fullstr.length()-1] == ',') {
 		cerr << "Found a comma at the end of the line!" << endl;
 		exit(-7);
 	}
@@ -137,13 +136,24 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 
 	while (string::npos != lastpos) {
 		if (pos == lastpos) {
-			cerr << "Empty columnname found!" << endl;
+			cerr << "Empty cell found!" << endl;
 			exit(-8);
 		}
 		elements.push_back(fullstr.substr(pos, lastpos-pos));
 		pos = lastpos+1;
 		lastpos = fullstr.find_first_of(delimiter, pos);
-		if ((lastpos > openQuote)&&(lastpos<closeQuote)) {
+		if ((lastpos >= openQuote)&&(lastpos<closeQuote)) {
+			if ((lastpos > openDoubleQuote) && (lastpos < closeDoubleQuote)) {
+				if (closeDoubleQuote != string::npos) {
+					lastpos = fullstr.find_first_of(delimiter, closeQuote);
+					openDoubleQuote = fullstr.find("\"\"", closeDoubleQuote + 2);
+					closeDoubleQuote = fullstr.find("\"\"", openDoubleQuote + 2);
+				}
+				else {
+					cerr << "You haven't closed quotes!" << endl;
+					exit(-15);
+				}
+			}
 			if (closeQuote != string::npos) {
 				lastpos = fullstr.find_first_of(delimiter, closeQuote);
 			}
@@ -152,8 +162,6 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 				exit(-15);
 			}
 			openQuote = fullstr.find_first_of('"', closeQuote+1);
-			openDoubleQuote = fullstr.find("\"\"", closeDoubleQuote + 2);
-			closeDoubleQuote = fullstr.find("\"\"", openDoubleQuote + 2);
 			closeQuote = fullstr.find_first_of('"', openQuote+1);
 			if ((openQuote == openDoubleQuote) || (closeQuote == openDoubleQuote)) {
 				closeDoubleQuote = fullstr.find("\"\"", openDoubleQuote+2);
@@ -161,12 +169,24 @@ void splitString(string &fullstr, vector<string> &elements, bool thisIsFirstLine
 			}
 		}
 	}
-	elements.push_back(fullstr.substr(pos, fullstr.length()));
+	if (pos != openQuote) {
+		elements.push_back(fullstr.substr(pos, fullstr.length()));
+	}
+	else {
+		cerr << "You haven't closed quotes!" << endl;
+		exit(-15);
+	}
+	
 }
 
 void findDuplicates(vector<string> splitString) {
 	set<string>columns;
 	for (auto i: splitString) {
+		if (i.find_first_of("1234567890") != string::npos) {
+			cerr << "Numbers in columnnames found!";
+			columns.clear();
+			exit(-23);
+		}
 		if (!columns.insert(i).second) {
 			cerr << "Duplicate columns found!";
 			columns.clear();
@@ -233,7 +253,7 @@ void lineParser(vector<vector<string>> &table) {
 				}
 				else {
 					try {
-						stoi(table[i][j]);
+						stoul(table[i][j]);
 					}
 					catch (const invalid_argument& ia) {
 						cerr << table[0][j] << table[i][0] << ": Found not integer line name!" << endl;
@@ -419,19 +439,19 @@ bool findInTable(string& str, int line, int column, vector<vector<string>> table
 void tableViewer(vector<vector<string>> table) {
 	cout << ',';
 	for (auto i : table) {
-		for (auto j : i) {
-			/*if (j.find_first_of('"') != string::npos) {
+		for (int j = 0; j < i.size(); j++) {
+			/*if (i[j].find_first_of('"') != string::npos) {
 					set <string::size_type> doubleQuotesPositions;
 					string::size_type lastpos = 0;
-					while (j.find("\"\"", lastpos) != string::npos) {
-						doubleQuotesPositions.insert(j.find("\"\"", lastpos));
+					while (i[j].find("\"\"", lastpos) != string::npos) {
+						doubleQuotesPositions.insert(i[j].find("\"\"", lastpos));
 						lastpos += 2;
 					}
 					lastpos = 0;
-					while (j.find('"', lastpos) != string::npos) {
+					while (i[j].find('"', lastpos) != string::npos) {
 						set <string::size_type> temp(doubleQuotesPositions);
-						if (temp.insert(j.find('"', lastpos)).second) {
-							j.erase(j.find('"', lastpos), j.find('"', lastpos)+1);
+						if (temp.insert(i[j].find('"', lastpos)).second) {
+							i[j].erase(i[j].find('"', lastpos), i[j].find('"', lastpos)+1);
 
 						}
 						else {
@@ -439,16 +459,16 @@ void tableViewer(vector<vector<string>> table) {
 						}
 					}
 					lastpos = 0;
-					while (j.find("\"\"", lastpos) != string::npos) {
-						j.erase(j.find("\"\"", lastpos), j.find("\"\"", lastpos)+2);
+					while (i[j].find("\"\"", lastpos) != string::npos) {
+						i[j].erase(i[j].find("\"\"", lastpos), i[j].find("\"\"", lastpos)+2);
 						lastpos += 2;
 					}
 			}*/
-			if (j != i.back()) {
-				cout << j << ',';
+			if (j != i.size()-1) {
+				cout << i[j] << ',';
 			}
 			else {
-				cout << j;
+				cout << i[j];
 			}
 		}
 		cout << endl;
