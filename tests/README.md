@@ -13,7 +13,7 @@
 **Comment:** Passed  
 ## TC-2
 **Description:** simple test with doubles to evaluate  
-**Input:** [file simpleInt.csv](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/simpleDouble.csv)  
+**Input:** [file simpleDouble.csv](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/simpleDouble.csv)  
 **Expected output:**
 ```
 ,A,B,C,Cell
@@ -100,13 +100,13 @@ Duplicate columns found!
 Found a comma at the end of the line!
 ```
 **Comment:** Passed  
-## TC-11
-**Description:** file contains commas at the end of the line  
-**Input:**   [file with commas at the end of the line](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/commasAtTheEnd.csv)  
+## TC-12
+**Description:** file contains empty cell  
+**Input:**   [file with empty cell](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/emptyArgument.csv)  
 **Expected output:** Error and closing a program  
 **Real output**  
 ```
-Found a comma at the end of the line!
+Empty cell found!
 ```
 **Comment:** Passed  
 ## TC-12
@@ -190,12 +190,21 @@ B3: Division by zero!
 B3: Found more than one operation in a cell
 ```
 **Comment:** Passed  
-## TC-21
-**Description:** there is a digit in column name  
-**Input:**   [file with a digit in column name](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/columnNameWithDigit.csv)  
+## TC-22
+**Description:** not closed quotations  
+**Input:**   [file notClosedQuotes.csv](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/notClosedQuotes.csv)  
 **Expected output:** Error and closing a program  
 **Real output** 
 ```
-Numbers in columnnames found!
+You haven't closed quotes!
+```
+**Comment:** Passed  
+## TC-23
+**Description:** extra column name in the title  
+**Input:**   [file notClosedQuotes.csv](https://github.com/eltsovaad/NokiaInternShip/blob/master/tests/oneMoreColumnName.csv)  
+**Expected output:** Error and closing a program  
+**Real output** 
+```
+Found lines with different length!
 ```
 **Comment:** Passed  
