@@ -1,12 +1,12 @@
 # CSV-table reader
-Reads CSV file with such a table:  
+Reads CSV file from such a table, where the first element is always empty:  
 ```
 ,A,B,Cell  
 1,1,0,1  
 2,2,=A1+Cell30,0  
 30,0,=B1+A1,5 
  ```
-where the first element is always empty and prints "evaluated" table in the console:
+And prints "evaluated" table in the console:
   ```
   ,A,B,Cell
   1,1,0,1
